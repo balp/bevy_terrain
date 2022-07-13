@@ -1,6 +1,8 @@
+
 use bevy::pbr::wireframe::{Wireframe, WireframeConfig, WireframePlugin};
 use bevy::prelude::*;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
+use image::io::Reader as ImageReader;
 
 fn main() {
     App::new()
@@ -19,7 +21,46 @@ struct HeightMap {
     map: Vec<f64>,
 }
 
-fn load_height_map() -> HeightMap {
+fn load_height_map(path: &str) -> Result<HeightMap, &str> {
+    if let Ok(reader) = ImageReader::open(path) {
+        if let Ok(img) = reader.decode() {
+            //dbg!("{}", &img);
+            if img.width() == img.height() { // Only handle square height maps for now
+                if let Some(fimg) = img.as_luma16() {
+                    let mut result = HeightMap {
+                        width: img.width() as u16,
+                        max_height: f64::MIN,
+                        min_height: f64::MAX,
+                        map: vec![],
+                    };
+                    let mut buffer: Vec<f64> = Vec::new();
+                    for pixel in fimg.pixels() {
+                        let height = pixel[0] as f64;
+                        buffer.push(height);
+                        if height > result.max_height {
+                            result.max_height = height;
+                        }
+                        if height < result.min_height {
+                            result.min_height = height;
+                        }
+                    }
+                    result.map = buffer;
+                    return Ok(result)
+                } else {
+                    return Err("Unable to convert image to luma16")
+                }
+            } else {
+                return Err("Not a square image")
+            }
+        } else {
+            return Err("Can't read image")
+        }
+    } else {
+        return Err("Can't open file")
+    }
+}
+
+fn make_height_map() -> HeightMap {
     // Terrain mesh
     let _map_6x6 = HeightMap {
         width: 6,
@@ -153,7 +194,7 @@ fn setup(
         ..default()
     });
 
-    let height_map = load_height_map();
+    let height_map = make_height_map();
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(create_simple_terrain(&height_map)),
         material: materials.add(Color::rgb(0.1, 0.7, 0.3).into()),
@@ -190,7 +231,7 @@ fn setup(
 
 #[cfg(test)]
 mod tests {
-    use crate::{create_simple_terrain, HeightMap};
+    use crate::{create_simple_terrain, HeightMap, load_height_map};
     use bevy::prelude::*;
     use bevy::render::mesh::Indices::U16;
     use bevy::render::mesh::VertexAttributeValues;
@@ -200,6 +241,13 @@ mod tests {
     fn it_works() {
         let result = 2 + 2;
         assert_eq!(result, 4);
+    }
+
+    #[test]
+    fn terrain_from_file() {
+        let map = load_height_map("resources/test/402.png");
+        assert!(map.is_ok());
+        assert_eq!(map.unwrap().width, 300);
     }
 
     #[test]
