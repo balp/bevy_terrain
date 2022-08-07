@@ -1,8 +1,7 @@
-mod heightmap;
-mod terrain;
-
+use std::env;
 use bevy::pbr::wireframe::{Wireframe, WireframeConfig, WireframePlugin};
 use bevy::prelude::*;
+use bevy_flycam::PlayerPlugin;
 
 fn main() {
     App::new()
@@ -10,18 +9,8 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_plugin(WireframePlugin)
-        .add_system(rotate_cam)
+        .add_plugin(PlayerPlugin)
         .run();
-}
-
-fn rotate_cam(mut query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
-    let hsize = (5 / 2) as f32;
-    for mut transform in query.iter_mut() {
-        let alpha = time.seconds_since_startup() as f32 / 2.;
-        *transform =
-            Transform::from_xyz(hsize + alpha.cos() * hsize, 3., hsize + alpha.sin() * hsize)
-                .looking_at(Vec3::new(0., 0., 0.), Vec3::Y);
-    }
 }
 
 /// set up a simple 3D scene
@@ -31,6 +20,11 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let args : Vec<String> = env::args().collect();
+    let mut terrain_file_name = "resources/svanesund_heightmap_1700x1700.png";
+    if args.len() > 1 {
+        terrain_file_name = args[1].as_str();
+    }
     wireframe_config.global = false;
     // water plane
     commands.spawn_bundle(PbrBundle {
@@ -39,14 +33,11 @@ fn setup(
         transform: Transform::from_xyz(0.0, 0., 0.0),
         ..default()
     });
-
-    // Terrains maps
-    // let height_map = heightmap::make_height_map();
-    if let Ok(height_map) = heightmap::load_height_map("resources/test/402.png") {
-        let scaled_map = height_map.transform(5., -1.);
+    if let Ok(height_map) = bevy_terrain::heightmap::load_height_map(terrain_file_name) {
+        let scaled_map = height_map.transform(318., -20.);
         commands
             .spawn_bundle(PbrBundle {
-                mesh: meshes.add(terrain::create_simple_terrain(&scaled_map)),
+                mesh: meshes.add(bevy_terrain::terrain::create_simple_terrain(&scaled_map)),
                 material: materials.add(Color::rgb(0.1, 0.7, 0.3).into()),
                 transform: Transform::from_xyz(
                     -(scaled_map.width as f32 / 2.),
@@ -56,15 +47,10 @@ fn setup(
                 ..default()
             })
             .insert(Wireframe);
+    } else {
+        panic!("Unable to load terrain!!!")
     }
 
-    // cube
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 0.1 })),
-        material: materials.add(Color::rgb(0.3, 0.3, 0.3).into()),
-        transform: Transform::from_xyz(0.0, 0.5, 0.0),
-        ..default()
-    });
     // light
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
@@ -73,11 +59,6 @@ fn setup(
             ..default()
         },
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..default()
-    });
-    // camera
-    commands.spawn_bundle(PerspectiveCameraBundle {
-        transform: Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 }

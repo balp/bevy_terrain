@@ -2,10 +2,12 @@
 name = "bevy_terrain"
 version = "0.1.0"
 edition = "2021"
-
+rust-version = "1.62"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 image = "0.24"
 bevy = "0.7"
-bevy_rapier3d = "*"
+bevy_rapier3d = "0.15.0"
+bevy_flycam = "0.7.0"
+assert_approx_eq = "1.1"

@@ -1,4 +1,6 @@
-use crate::{HeightMap, Indices, Mesh, PrimitiveTopology};
+use bevy::prelude::*;
+use bevy::render::mesh::{Indices, PrimitiveTopology};
+use crate::heightmap::HeightMap;
 
 pub fn create_simple_terrain(height_map: &HeightMap) -> Mesh {
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
@@ -44,22 +46,19 @@ pub fn create_simple_terrain(height_map: &HeightMap) -> Mesh {
     mesh
 }
 
-
 #[cfg(test)]
 mod tests {
+    use crate::heightmap::HeightMap;
     use crate::terrain::create_simple_terrain;
     use bevy::prelude::*;
     use bevy::render::mesh::Indices::U16;
     use bevy::render::mesh::VertexAttributeValues;
-    use crate::heightmap::{HeightMap};
-
 
     #[test]
     fn it_works() {
         let result = 2 + 2;
         assert_eq!(result, 4);
     }
-
 
     #[test]
     /// Make sure a simple 2x2 height map generates correct
@@ -76,12 +75,7 @@ mod tests {
             width: 2,
             max_height: 3.,
             min_height: 0.,
-            map: vec![
-                0.,
-                1.,
-                2.,
-                3.,
-            ],
+            map: vec![0., 1., 2., 3.],
         };
         let mesh = create_simple_terrain(&_map_2x2);
         assert_eq!(mesh.count_vertices(), 4);
@@ -97,10 +91,7 @@ mod tests {
 
         if let U16(bytes) = mesh.indices().unwrap() {
             dbg!("{}", bytes);
-            assert_eq!(*bytes, vec![
-                0u16, 3u16, 1u16,
-                0u16, 2u16, 3u16,
-            ]);
+            assert_eq!(*bytes, vec![0u16, 3u16, 1u16, 0u16, 2u16, 3u16,]);
         }
     }
 
@@ -120,11 +111,7 @@ mod tests {
             width: 3,
             max_height: 8.,
             min_height: 0.,
-            map: vec![
-                0., 1., 2.,
-                3., 4., 5.,
-                6., 7., 8.,
-            ],
+            map: vec![0., 1., 2., 3., 4., 5., 6., 7., 8.],
         };
         let mesh = create_simple_terrain(&_map_3x3);
         assert_eq!(mesh.count_vertices(), 9);
@@ -145,15 +132,13 @@ mod tests {
 
         if let U16(bytes) = mesh.indices().unwrap() {
             dbg!("{}", bytes);
-            assert_eq!(*bytes, vec![0u16, 4u16, 1u16,
-                                    0u16, 3u16, 4u16,
-                                    1u16, 5u16, 2u16,
-                                    1u16, 4u16, 5u16,
-                                    3u16, 7u16, 4u16,
-                                    3u16, 6u16, 7u16,
-                                    4u16, 8u16, 5u16,
-                                    4u16, 7u16, 8u16,
-            ]);
+            assert_eq!(
+                *bytes,
+                vec![
+                    0u16, 4u16, 1u16, 0u16, 3u16, 4u16, 1u16, 5u16, 2u16, 1u16, 4u16, 5u16, 3u16,
+                    7u16, 4u16, 3u16, 6u16, 7u16, 4u16, 8u16, 5u16, 4u16, 7u16, 8u16,
+                ]
+            );
         }
     }
 }
