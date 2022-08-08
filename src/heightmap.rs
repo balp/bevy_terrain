@@ -24,6 +24,7 @@ impl HeightMap {
         };
         map
     }
+
     /// Make a new HeightMap with a linear translation of height
     ///
     /// The new heightmap will have it's height translated between the
@@ -100,50 +101,6 @@ pub fn load_height_map(path: &str) -> Result<HeightMap, &str> {
     } else {
         Err("Can't open file")
     };
-}
-
-pub fn make_height_map() -> HeightMap {
-    // Terrain mesh
-    let _map_6x6 = HeightMap {
-        width: 6,
-        max_height: 0.3,
-        min_height: -0.1,
-        map: vec![
-            -0.1, 0.1, 0.1, 0.1, 0.1, 0.1, -0.1, 0.2, 0.2, 0.2, 0.2, 0.1, -0.1, 0.2, 0.1, 0.1, 0.3,
-            0.1, -0.1, 0.2, -0.1, 0.1, 0.3, 0.1, -0.1, 0.2, 0.2, 0.2, 0.3, 0.1, -0.1, 0.1, 0.1,
-            0.1, 0.1, 0.1,
-        ],
-    };
-    let _map_3x3 = HeightMap {
-        width: 3,
-        max_height: 8.,
-        min_height: 0.,
-        map: vec![0., 1., 0., 3., 4., 5., 6., 5., 8.],
-    };
-    let _map_2x2 = HeightMap {
-        width: 2,
-        max_height: 0.2,
-        min_height: -0.1,
-        map: vec![-0.1, 0.1, -0.2, 0.2],
-    };
-    let _map_4x4 = HeightMap {
-        width: 4,
-        max_height: 1.0,
-        min_height: 0.,
-        map: vec![
-            0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0,
-        ],
-    };
-    let _map_5x5 = HeightMap {
-        width: 5,
-        max_height: 0.1,
-        min_height: 0.1,
-        map: vec![
-            0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-            0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1,
-        ],
-    };
-    _map_6x6
 }
 
 #[cfg(test)]
@@ -226,5 +183,15 @@ mod tests {
         } else {
             panic!("Unable to load test image map");
         }
+    }
+
+    #[test]
+    fn small_map_2x2() {
+        let map = HeightMap::from_vec(vec![1., 2., 3., 4.,]);
+        let expected = vec![1., 2., 3., 4.,];
+        assert_eq!(map.width, 2);
+        assert_eq!(map.max_height, 4.);
+        assert_eq!(map.min_height, 1.);
+        assert_eq!(map.map, expected);
     }
 }
